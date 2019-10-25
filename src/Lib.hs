@@ -6,8 +6,7 @@ module Lib
     , app
     ) where
 
-import Data.Aeson
-import Data.Aeson.TH
+import Data.Proxy
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
@@ -17,16 +16,7 @@ data Operation = Add | Subtract deriving (Show, Bounded, Enum)
 
 instance FromHttpApiData Operation where parseUrlPiece = parseBoundedTextData
 
-data User = User
-  { userId        :: Integer
-  , userFirstName :: String
-  , userLastName  :: String
-  } deriving (Eq, Show)
-
-
-$(deriveJSON defaultOptions ''User)
-
-type API = "users" :> Get '[JSON] [User]
+type API = "even-or-odd" :> Capture "x" Integer :> Get '[JSON] String
        :<|> "arithmetic" :> Capture "x" Integer :> Capture "operation" Operation :> Capture "y" Integer :> Get '[JSON] Integer
 
 
@@ -40,12 +30,10 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = getUsers :<|> arithmetic
+server = evenOrOdd :<|> arithmetic
 
-  where getUsers :: Handler [User]
-        getUsers = return [ User 1 "Isaac" "Newton"
-               , User 2 "Albert" "Einstein"
-               ]
+  where evenOrOdd :: Integer -> Handler String
+        evenOrOdd x = return (if mod x 2 == 0 then "even" else "odd")
 
         arithmetic :: Integer -> Operation -> Integer -> Handler Integer
         arithmetic x Add y = return (x + y)
