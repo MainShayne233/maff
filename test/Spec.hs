@@ -5,7 +5,6 @@ module Main (main) where
 import Lib (app)
 import Test.Hspec
 import Test.Hspec.Wai
-import Test.Hspec.Wai.JSON
 
 main :: IO ()
 main = hspec spec
@@ -18,3 +17,9 @@ spec = with (return app) $ do
         it "responds with [User]" $ do
             let users = "[{\"userId\":1,\"userFirstName\":\"Isaac\",\"userLastName\":\"Newton\"},{\"userId\":2,\"userFirstName\":\"Albert\",\"userLastName\":\"Einstein\"}]"
             get "/users" `shouldRespondWith` users
+    describe "GET /arithmetic/:x/:operation/:y" $ do
+       it "should response with 200" $ do
+            get "/arithmetic/3/add/4" `shouldRespondWith` 200
+       it "should perform the correct operation" $ do
+            get "/arithmetic/3/add/4" `shouldRespondWith` "7"
+            get "/arithmetic/3/subtract/4" `shouldRespondWith` "-1"

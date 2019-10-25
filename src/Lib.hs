@@ -11,6 +11,11 @@ import Data.Aeson.TH
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
+import Web.Internal.HttpApiData
+
+data Operation = Add | Subtract deriving (Show, Bounded, Enum)
+
+instance FromHttpApiData Operation where parseUrlPiece = parseBoundedTextData
 
 data User = User
   { userId        :: Integer
@@ -18,10 +23,11 @@ data User = User
   , userLastName  :: String
   } deriving (Eq, Show)
 
+
 $(deriveJSON defaultOptions ''User)
 
 type API = "users" :> Get '[JSON] [User]
-       :<|> "add" :> Capture "x" Integer :> Capture "y" Integer :> Get '[JSON] Integer
+       :<|> "arithmetic" :> Capture "x" Integer :> Capture "operation" Operation :> Capture "y" Integer :> Get '[JSON] Integer
 
 
 startApp :: IO ()
@@ -34,12 +40,13 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = getUsers :<|> add
+server = getUsers :<|> arithmetic
 
   where getUsers :: Handler [User]
         getUsers = return [ User 1 "Isaac" "Newton"
                , User 2 "Albert" "Einstein"
                ]
 
-        add :: Integer -> Integer -> Handler Integer
-        add x y = return (x + y)
+        arithmetic :: Integer -> Operation -> Integer -> Handler Integer
+        arithmetic x Add y = return (x + y)
+        arithmetic x Subtract y = return(x - y)
